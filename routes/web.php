@@ -96,18 +96,18 @@ Route::middleware(['auth'])->prefix('staff')->name('staff.')->group(function () 
     Route::get('/payouts/attendance-reports', fn () => view('staff.stub', ['title' => '勤怠報告状況']))->name('payouts.attendance_reports');
     Route::get('/payouts/execution',          fn () => view('staff.stub', ['title' => '実施状況']))->name('payouts.execution');
 
-// 追加：講師（スタブ）
-Route::prefix('teachers')->name('teachers.')->group(function () {
-    Route::get('/search', function () {
-        abort_if(!auth()->user() || (auth()->user()->role ?? null) !== 'admin', 403);
-        return view('staff.stub', ['title' => '講師検索']);
-    })->name('search');
+    // 追加：講師（スタブ）
+    Route::prefix('teachers')->name('teachers.')->group(function () {
+        Route::get('/search', function () {
+            abort_if(!auth()->user() || (auth()->user()->role ?? null) !== 'admin', 403);
+            return view('staff.stub', ['title' => '講師検索']);
+        })->name('search');
 
-    Route::get('/', function () {
-        abort_if(!auth()->user() || (auth()->user()->role ?? null) !== 'admin', 403);
-        return view('staff.stub', ['title' => '講師']);
-    })->name('index');
-});
+        Route::get('/', function () {
+            abort_if(!auth()->user() || (auth()->user()->role ?? null) !== 'admin', 403);
+            return view('staff.stub', ['title' => '講師']);
+        })->name('index');
+    });
 });
 
 // ==================== 管理メール履歴 ====================
