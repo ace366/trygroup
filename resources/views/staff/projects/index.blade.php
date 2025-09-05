@@ -44,7 +44,9 @@
                         <option value="">すべて</option>
                         @foreach($fiscalYears as $fy)
                             <option value="{{ $fy->id }}"
-                                @selected((string)$fy->id === (string)$filters['fiscal_year'])>
+                                @selected(
+                                    (string)$fy->id === (string)($filters['fiscal_year'] ?? $currentFiscalYearId)
+                                )>
                                 {{ $fy->year }}（{{ $fy->start_date->format('Y/m/d') }}〜{{ $fy->end_date->format('Y/m/d') }}）
                             </option>
                         @endforeach
@@ -56,14 +58,14 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">期間（契約期間と交差）</label>
                     <div class="flex items-center gap-2">
                         <input type="text" name="date_from" inputmode="numeric" pattern="\d{8}"
-                               placeholder="YYYYMMDD"
-                               value="{{ e($filters['date_from']) }}"
-                               class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            placeholder="YYYYMMDD"
+                            value="{{ e($filters['date_from'] ?? $currentFiscalYearStart) }}"
+                            class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         <span class="text-gray-500">〜</span>
                         <input type="text" name="date_to" inputmode="numeric" pattern="\d{8}"
-                               placeholder="YYYYMMDD"
-                               value="{{ e($filters['date_to']) }}"
-                               class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            placeholder="YYYYMMDD"
+                            value="{{ e($filters['date_to'] ?? $currentFiscalYearEnd) }}"
+                            class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <p class="text-xs text-gray-500 mt-1">例）20250401 〜 20260331</p>
                 </div>
@@ -74,7 +76,7 @@
                     <div class="flex flex-wrap gap-4">
                         <label class="inline-flex items-center gap-2">
                             <input type="checkbox" name="type[]" value="venue"
-                                @checked(in_array('venue', $filters['type']))>
+                                @checked(in_array('venue', $filters['type'] ?? ['venue']))>
                             <span>会場型</span>
                         </label>
                         <label class="inline-flex items-center gap-2">
