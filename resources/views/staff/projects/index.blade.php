@@ -224,121 +224,133 @@
     {{-- 受託元モーダル：検索/ページング/選択 --}}
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const modal = document.getElementById('client-modal');
-      const rows  = document.getElementById('client-rows');
-      const pager = document.getElementById('client-pager');
-      const total = document.getElementById('client-total');
-      const qBox  = document.getElementById('client-q');
-      const openBtn = document.getElementById('open-client-modal');
-      const okBtn   = document.getElementById('client-ok');
-      const searchBtn = document.getElementById('client-search');
-      const clearBtn  = document.getElementById('client-clear');
+    const clientModal = document.getElementById('client-modal');
+    const createModal = document.getElementById('create-project-modal');
+    const rows  = document.getElementById('client-rows');
+    const pager = document.getElementById('client-pager');
+    const total = document.getElementById('client-total');
+    const qBox  = document.getElementById('client-q');
+    const openBtn = document.getElementById('open-client-modal');
+    const okBtn   = document.getElementById('client-ok');
+    const searchBtn = document.getElementById('client-search');
+    const clearBtn  = document.getElementById('client-clear');
 
-      if (!modal || !rows || !pager || !total || !qBox || !openBtn || !okBtn) return;
+    if (!clientModal || !rows || !pager || !total || !qBox || !openBtn || !okBtn) return;
 
-      let selected = null;
-      let currentPage = 1;
-      let lastPage = 1;
-      const perPage = 10;
+    let selected = null;
+    let currentPage = 1;
+    let lastPage = 1;
+    const perPage = 10;
 
-      const open  = () => modal.classList.remove('hidden');
-      const close = () => modal.classList.add('hidden');
+    const open  = () => {
+        if (createModal) createModal.classList.add('hidden'); // 作成モーダルを隠す
+        clientModal.classList.remove('hidden');
+    };
+    const close = () => {
+        clientModal.classList.add('hidden');
+        if (createModal) {
+        createModal.classList.remove('hidden'); // 作成モーダルを再表示
+        createModal.classList.add('flex');
+        }
+    };
 
-      openBtn.addEventListener('click', () => {
+    openBtn.addEventListener('click', () => {
         currentPage = 1;
         qBox.value = '';
         fetchAndRender().then(open);
-      });
+    });
 
-      modal.addEventListener('click', (e) => {
+    clientModal.addEventListener('click', (e) => {
         if (e.target.dataset.close === '1') close();
-      });
+    });
 
-      searchBtn?.addEventListener('click', () => {
+    searchBtn?.addEventListener('click', () => {
         currentPage = 1;
         fetchAndRender();
-      });
-      clearBtn?.addEventListener('click', () => {
+    });
+    clearBtn?.addEventListener('click', () => {
         qBox.value = '';
         currentPage = 1;
         fetchAndRender();
-      });
+    });
 
-      function renderRows(list) {
+    function renderRows(list) {
         rows.innerHTML = '';
         list.forEach(c => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-gray-50';
-          tr.innerHTML = `
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        tr.innerHTML = `
             <td class="px-3 py-2">
-              <input type="radio" name="client_pick" value="${c.id}">
+            <input type="radio" name="client_pick" value="${c.id}">
             </td>
             <td class="px-3 py-2">
-              <div class="font-medium">[${c.client_code}] ${c.client_name}</div>
+            <div class="font-medium">[${c.client_code}] ${c.client_name}</div>
             </td>
             <td class="px-3 py-2 text-sm text-gray-600">[${String(c.base_id).padStart(4,'0')}]</td>
-          `;
-          tr.querySelector('input[type="radio"]').addEventListener('change', () => {
+        `;
+        tr.querySelector('input[type="radio"]').addEventListener('change', () => {
             selected = { id:c.id, name:c.client_name, code:c.client_code };
-          });
-          rows.appendChild(tr);
         });
-      }
+        rows.appendChild(tr);
+        });
+    }
 
-      function renderPager() {
+    function renderPager() {
         pager.innerHTML = '';
         const mk = (p, label) => {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'px-2 py-1 border rounded ' + (p===currentPage ? 'bg-indigo-600 text-white' : 'bg-white');
-          b.textContent = label ?? p;
-          b.addEventListener('click', () => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'px-2 py-1 border rounded ' + (p===currentPage ? 'bg-indigo-600 text-white' : 'bg-white');
+        b.textContent = label ?? p;
+        b.addEventListener('click', () => {
             if (p<1 || p>lastPage || p===currentPage) return;
             currentPage = p;
             fetchAndRender();
-          });
-          return b;
+        });
+        return b;
         };
         pager.appendChild(mk(currentPage-1, '‹'));
         for (let p=1; p<=lastPage; p++) pager.appendChild(mk(p));
         pager.appendChild(mk(currentPage+1, '›'));
-      }
+    }
 
-      async function fetchAndRender() {
+    async function fetchAndRender() {
         rows.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-gray-500">読み込み中...</td></tr>`;
         try {
-          const url = new URL(`{{ route('staff.api.clients.index') }}`);
-          url.searchParams.set('page', currentPage);
-          url.searchParams.set('per_page', perPage);
-          if (qBox.value.trim() !== '') url.searchParams.set('q', qBox.value.trim());
+        const url = new URL(`{{ route('staff.api.clients.index') }}`);
+        url.searchParams.set('page', currentPage);
+        url.searchParams.set('per_page', perPage);
+        if (qBox.value.trim() !== '') url.searchParams.set('q', qBox.value.trim());
 
-          const res = await fetch(url, { headers: {'X-Requested-With':'XMLHttpRequest'} });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const data = await res.json();
+        const res = await fetch(url, { headers: {'X-Requested-With':'XMLHttpRequest'} });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
 
-          renderRows(data.data ?? []);
-          currentPage = data.current_page ?? 1;
-          lastPage    = data.last_page ?? 1;
-          total.textContent = `${data.total ?? 0} 件`;
-          renderPager();
+        renderRows(data.data ?? []);
+        currentPage = data.current_page ?? 1;
+        lastPage    = data.last_page ?? 1;
+        total.textContent = `${data.total ?? 0} 件`;
+        renderPager();
         } catch (e) {
-          rows.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-600">読み込みに失敗しました</td></tr>`;
-          console.error(e);
+        rows.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-600">読み込みに失敗しました</td></tr>`;
+        console.error(e);
         }
-      }
+    }
 
-      okBtn.addEventListener('click', () => {
-        if (!selected) return close();
+    okBtn.addEventListener('click', () => {
+        if (selected) {
         const idInput = document.getElementById('client_id');
         const disp    = document.getElementById('client_display');
         if (idInput && disp) {
-          idInput.value = selected.id;
-          disp.value = `[${selected.code}] ${selected.name}`;
+            idInput.value = selected.id;
+            disp.value = `[${selected.code}] ${selected.name}`;
         }
-        close();
-      });
+        }
+        close(); // 選択確定後もキャンセル後も作成モーダルに戻す
+    });
     });
     </script>
+
 
     {{-- 受託元 選択モーダル --}}
     <div id="client-modal" class="fixed inset-0 z-50 hidden">
